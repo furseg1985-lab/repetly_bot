@@ -1,8 +1,12 @@
 import asyncio
 import logging
 import os
+import threading
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+
+# Импорты для веб-сервера (чтобы Render не выключал бота)
+from flask import Flask
 
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import CommandStart, CommandObject
@@ -14,15 +18,18 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import aiosqlite
 
+# ==========================================
+# 1. НАСТРОЙКИ И ЗАГРУЗКА
+# ==========================================
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-BOT_USERNAME = "RepetlyAssistantBot" 
+BOT_USERNAME = "RepetlyAssistantBot" # Замени, если юзернейм другой
 
 logging.basicConfig(level=logging.INFO)
 router = Router()
 
 # ==========================================
-# БАЗА ДАННЫХ
+# 2. БАЗА ДАННЫХ
 # ==========================================
 DB_NAME = "repetly.db"
 
@@ -35,7 +42,6 @@ async def init_db():
                 student_chat_id INTEGER, parent_chat_id INTEGER
             )
         """)
-        # Добавили is_paid (0 - не оплачено, 1 - оплачено)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS lessons (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, tutor_id INTEGER, 
@@ -106,9 +112,7 @@ async def get_lessons_for_student(student_id: int):
         async with db.execute(query, (student_id,)) as cursor:
             return await cursor.fetchall()
 
-# --- ФУНКЦИИ ДЛЯ ОПЛАТ ---
 async def get_unpaid_lessons(tutor_id: int):
-    """Берет все занятия, которые уже прошли (или проходят сегодня), но не оплачены"""
     async with aiosqlite.connect(DB_NAME) as db:
         query = """
             SELECT l.id, l.lesson_time, s.name 
@@ -126,7 +130,7 @@ async def mark_lesson_paid(lesson_id: int):
         await db.commit()
 
 # ==========================================
-# ФОНОВАЯ ЗАДАЧА: НАПОМИНАНИЯ
+# 3. ФОНОВАЯ ЗАДАЧА: НАПОМИНАНИЯ
 # ==========================================
 async def check_reminders(bot: Bot):
     now = datetime.now()
@@ -159,7 +163,7 @@ async def check_reminders(bot: Bot):
         await db.commit()
 
 # ==========================================
-# СОСТОЯНИЯ (FSM)
+# 4. СОСТОЯНИЯ (FSM)
 # ==========================================
 class AddStudent(StatesGroup):
     waiting_for_name = State()
@@ -169,7 +173,7 @@ class AddLesson(StatesGroup):
     waiting_for_time = State()
 
 # ==========================================
-# КЛАВИАТУРЫ
+# 5. КЛАВИАТУРЫ
 # ==========================================
 def get_main_menu():
     builder = InlineKeyboardBuilder()
@@ -211,7 +215,6 @@ def get_schedule_menu():
     builder.adjust(1)
     return builder.as_markup()
 
-# Клавиатура для долгов
 def get_payments_menu(unpaid_lessons):
     builder = InlineKeyboardBuilder()
     if not unpaid_lessons:
@@ -243,7 +246,7 @@ def get_cancel_menu():
     return builder.as_markup()
 
 # ==========================================
-# ОБРАБОТЧИКИ СТАРТА
+# 6. ОБРАБОТЧИКИ СТАРТА И РОЛЕЙ
 # ==========================================
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
@@ -292,7 +295,7 @@ async def process_tutor_back(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 # ==========================================
-# ЛОГИКА РЕПЕТИТОРА (УЧЕНИКИ)
+# 7. ЛОГИКА УЧЕНИКОВ И РАСПИСАНИЯ
 # ==========================================
 @router.callback_query(F.data == "tutor_students")
 async def show_students(callback: CallbackQuery):
@@ -333,9 +336,6 @@ async def process_delete_student(callback: CallbackQuery):
     text = "👤 **Ваши ученики:**\n\nНажмите на крестик, чтобы удалить." if students else "У вас пока нет учеников."
     await callback.message.edit_text(text, reply_markup=get_students_menu(students), parse_mode="Markdown")
 
-# ==========================================
-# ЛОГИКА РАСПИСАНИЯ
-# ==========================================
 @router.callback_query(F.data == "tutor_schedule")
 async def show_tutor_schedule(callback: CallbackQuery):
     lessons = await get_lessons_for_tutor(callback.from_user.id)
@@ -383,37 +383,26 @@ async def process_lesson_time(message: Message, state: FSMContext):
     await message.answer(f"✅ Занятие на **{message.text}** добавлено! Бот сам пришлет напоминания.", reply_markup=get_tutor_menu(), parse_mode="Markdown")
 
 # ==========================================
-# ЛОГИКА ОПЛАТ (ДОЛГИ)
+# 8. ЛОГИКА ОПЛАТ
 # ==========================================
 @router.callback_query(F.data == "tutor_payments")
 async def show_payments(callback: CallbackQuery):
     unpaid = await get_unpaid_lessons(callback.from_user.id)
-    
-    if not unpaid:
-        text = "💵 **Учет оплат**\n\nУра! Все занятия оплачены. Долгов нет."
-    else:
-        text = "💵 **Учет оплат**\n\nНиже список занятий, которые ожидают оплаты. Нажмите на кнопку, чтобы отметить оплату (наличными или переводом):"
-        
+    text = "💵 **Учет оплат**\n\nУра! Все занятия оплачены. Долгов нет." if not unpaid else "💵 **Учет оплат**\n\nНиже список занятий, которые ожидают оплаты:"
     await callback.message.edit_text(text, reply_markup=get_payments_menu(unpaid), parse_mode="Markdown")
     await callback.answer()
 
 @router.callback_query(F.data.startswith("pay_"))
 async def process_payment(callback: CallbackQuery):
-    lesson_id = int(callback.data.split("_")[1])
-    await mark_lesson_paid(lesson_id)
+    await mark_lesson_paid(int(callback.data.split("_")[1]))
     await callback.answer("✅ Оплата успешно зафиксирована!", show_alert=True)
     
-    # Обновляем список долгов
     unpaid = await get_unpaid_lessons(callback.from_user.id)
-    if not unpaid:
-        text = "💵 **Учет оплат**\n\nУра! Все занятия оплачены. Долгов нет."
-    else:
-        text = "💵 **Учет оплат**\n\nНиже список занятий, которые ожидают оплаты:"
-        
+    text = "💵 **Учет оплат**\n\nУра! Все занятия оплачены. Долгов нет." if not unpaid else "💵 **Учет оплат**\n\nНиже список занятий, которые ожидают оплаты:"
     await callback.message.edit_text(text, reply_markup=get_payments_menu(unpaid), parse_mode="Markdown")
 
 # ==========================================
-# МЕНЮ УЧЕНИКА И РОДИТЕЛЯ
+# 9. МЕНЮ УЧЕНИКА И РОДИТЕЛЯ
 # ==========================================
 @router.callback_query(F.data.in_({"student_schedule", "parent_schedule"}))
 async def show_any_schedule(callback: CallbackQuery):
@@ -426,7 +415,6 @@ async def show_any_schedule(callback: CallbackQuery):
         
     lessons = await get_lessons_for_student(student[0])
     name = student[1] if role == "parent" else "вас"
-    
     text = f"📅 **Расписание для {name}:**\n\n" if lessons else "📅 Пока нет назначенных занятий."
     if lessons:
         for (time,) in lessons: text += f"🕒 {time}\n"
@@ -436,9 +424,24 @@ async def show_any_schedule(callback: CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# ЗАПУСК
+# 10. ВЕБ-СЕРВЕР ДЛЯ RENDER (АНТИ-СОН)
+# ==========================================
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "Bot is alive!"
+
+def run_web():
+    app.run(host='0.0.0.0', port=8080)
+
+# ==========================================
+# 11. ЗАПУСК
 # ==========================================
 async def main():
+    # Запускаем веб-сервер в фоне (чтобы Render не засыпал)
+    threading.Thread(target=run_web).start()
+
     if not BOT_TOKEN:
         print("ОШИБКА: Токен не найден!")
         return
@@ -452,7 +455,7 @@ async def main():
     scheduler.add_job(check_reminders, 'interval', minutes=1, args=(bot,))
     scheduler.start()
     
-    print("Бот запущен! Тестируем учет оплат...")
+    print("Бот запущен! Тестируем...")
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
