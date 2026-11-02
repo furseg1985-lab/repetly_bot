@@ -1120,7 +1120,7 @@ def run_web():
     app.run(host='0.0.0.0', port=8080)
 
 async def main():
-    # threading.Thread(target=run_web).start() 
+    threading.Thread(target=run_web).start() 
     if not BOT_TOKEN:
         print("ОШИБКА: Токен не найден!")
         return
