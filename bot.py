@@ -4,6 +4,7 @@ import os
 import threading
 import html
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo # Фикс часового пояса!
 from dotenv import load_dotenv
 
 from flask import Flask
@@ -27,6 +28,9 @@ BOT_USERNAME = "RepetlyAssistantBot"
 ADMIN_USERNAME = "@furseg" 
 ADMIN_TG_LINK = "https://t.me/furseg" 
 ADMIN_ID = 123456789 # ВСТАВЬ СЮДА СВОЙ ID ИЗ @userinfobot!
+
+# Настройка часового пояса (Минск/Москва)
+TZ = ZoneInfo("Europe/Minsk")
 
 logging.basicConfig(level=logging.INFO)
 router = Router()
@@ -82,7 +86,7 @@ async def get_user_role(user_id: int):
             return row[0] if row else None
 
 async def set_user_pro(user_id: int, days: int = 30):
-    expiry_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+    expiry_date = (datetime.now(TZ) + timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute("UPDATE users SET is_pro = 1, pro_until = ? WHERE user_id = ?", (expiry_date, user_id))
         await db.commit()
@@ -94,8 +98,8 @@ async def get_user_pro(user_id: int):
             row = await cursor.fetchone()
             if row and row[0] == 1:
                 if row[1]:
-                    pro_until = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
-                    if pro_until > datetime.now():
+                    pro_until = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").replace(tzinfo=TZ)
+                    if pro_until > datetime.now(TZ):
                         return 1
                     else:
                         await db.execute("UPDATE users SET is_pro = 0 WHERE user_id = ?", (user_id,))
@@ -106,14 +110,14 @@ async def get_user_pro(user_id: int):
 
 async def update_payment_details(tutor_id: int, details: str):
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute("UPDATE users SET payment_details = ? WHERE user_id = ?", (details, tutor_id))
+        await db.execute("UPDATE users SET payment_details = ? WHERE user_id = ?", (html.escape(details), tutor_id))
         await db.commit()
 
 async def get_payment_details(tutor_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute("SELECT payment_details FROM users WHERE user_id = ?", (tutor_id,)) as cursor:
             row = await cursor.fetchone()
-            return html.escape(row[0]) if row and row[0] else "Реквизиты пока не указаны."
+            return row[0] if row and row[0] else "Реквизиты пока не указаны."
 
 async def add_student(tutor_id: int, name: str, subject: str, price: int, schedule: str, sub_total: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -205,7 +209,7 @@ async def cancel_lessons_in_period(tutor_id: int, start_date: datetime, end_date
             lessons = await cursor.fetchall()
         for l_id, time_str in lessons:
             try:
-                l_time = datetime.strptime(time_str, "%d.%m.%Y %H:%M")
+                l_time = datetime.strptime(time_str, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
                 if start_date <= l_time <= end_date:
                     await db.execute("UPDATE lessons SET status = 'canceled' WHERE id = ?", (l_id,))
                     canceled_count += 1
@@ -220,7 +224,7 @@ async def get_all_students_for_tutor(tutor_id: int):
             return await cursor.fetchall()
 
 async def get_monthly_earnings(tutor_id: int):
-    now = datetime.now()
+    now = datetime.now(TZ)
     month_str = now.strftime("%m.%Y")
     async with aiosqlite.connect(DB_NAME) as db:
         query = "SELECT SUM(price), COUNT(id) FROM lessons WHERE tutor_id = ? AND is_paid = 1 AND lesson_time LIKE ?"
@@ -229,7 +233,7 @@ async def get_monthly_earnings(tutor_id: int):
             return row[0] or 0, row[1] or 0 
 
 async def get_reminders_count(tutor_id: int):
-    now = datetime.now()
+    now = datetime.now(TZ)
     month_str = now.strftime("%m.%Y")
     async with aiosqlite.connect(DB_NAME) as db:
         query = "SELECT COUNT(id) FROM lessons WHERE tutor_id = ? AND is_reminded = 1 AND lesson_time LIKE ?"
@@ -256,10 +260,10 @@ async def get_parent_journal(student_id: int):
         return total, paid
 
 # ==========================================
-# 2. ФОНОВЫЕ ЗАДАЧИ
+# 2. ФОНОВЫЕ ЗАДАЧИ (С УЧЕТОМ ЧАСОВОГО ПОЯСА)
 # ==========================================
 async def check_reminders(bot: Bot):
-    now = datetime.now()
+    now = datetime.now(TZ)
     async with aiosqlite.connect(DB_NAME) as db:
         query = "SELECT l.id, l.lesson_time, l.reminded_24h, l.reminded_2h, s.name, s.subject, s.student_chat_id, s.parent_chat_id FROM lessons l JOIN students s ON l.student_id = s.id WHERE l.status != 'canceled'"
         async with db.execute(query) as cursor:
@@ -267,7 +271,7 @@ async def check_reminders(bot: Bot):
             
         for l_id, l_time_str, r24, r2, s_name, subject, s_chat, p_chat in lessons:
             try:
-                lesson_time = datetime.strptime(l_time_str, "%d.%m.%Y %H:%M")
+                lesson_time = datetime.strptime(l_time_str, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
             except ValueError:
                 continue 
                 
@@ -293,13 +297,13 @@ async def check_reminders(bot: Bot):
         await db.commit()
 
 async def check_subscriptions(bot: Bot):
-    now = datetime.now()
+    now = datetime.now(TZ)
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute("SELECT user_id, pro_until FROM users WHERE is_pro = 1") as cursor:
             users = await cursor.fetchall()
         for user_id, pro_until in users:
             if pro_until:
-                expiry = datetime.strptime(pro_until, "%Y-%m-%d %H:%M:%S")
+                expiry = datetime.strptime(pro_until, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TZ)
                 if expiry < now:
                     await db.execute("UPDATE users SET is_pro = 0 WHERE user_id = ?", (user_id,))
                     await db.commit()
@@ -466,7 +470,7 @@ def get_skip_menu():
 
 def get_days_menu():
     builder = InlineKeyboardBuilder()
-    today = datetime.now()
+    today = datetime.now(TZ)
     days_ru = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     for i in range(7):
         date = today + timedelta(days=i)
@@ -536,10 +540,8 @@ async def process_role_selection(callback: CallbackQuery):
 @router.callback_query(F.data == "back_to_main")
 async def process_back_button(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    role = await get_user_role(callback.from_user.id)
-    if role == "tutor": await safe_edit_text(callback.message, "Главное меню:", reply_markup=get_tutor_menu())
-    elif role == "parent": await safe_edit_text(callback.message, "Главное меню:", reply_markup=get_parent_menu())
-    else: await safe_edit_text(callback.message, "Главное меню:", reply_markup=get_student_menu())
+    # ПРАВИЛЬНЫЙ ВЫХОД В ГЛАВНОЕ МЕНЮ
+    await safe_edit_text(callback.message, "👋 Выберите вашу роль:", reply_markup=get_main_menu())
     await callback.answer()
 
 @router.callback_query(F.data == "tutor_menu_back")
@@ -838,7 +840,7 @@ async def process_payment(callback: CallbackQuery, bot: Bot):
 async def show_stats(callback: CallbackQuery):
     total_money, total_lessons = await get_monthly_earnings(callback.from_user.id)
     reminders_count = await get_reminders_count(callback.from_user.id)
-    current_month = datetime.now().strftime("%m.%Y")
+    current_month = datetime.now(TZ).strftime("%m.%Y")
     saved_hours = round(reminders_count * 5 / 60, 1)
     text = f"📊 <b>Статистика ({current_month})</b>\n\n💰 Заработано: <b>{total_money} руб.</b>\n✅ Оплачено уроков: <b>{total_lessons}</b>\n🔔 Отправлено напоминаний: <b>{reminders_count}</b>\n⏳ Сэкономлено времени: <b>~{saved_hours} ч.</b>\n"
     builder = InlineKeyboardBuilder()
@@ -859,8 +861,8 @@ async def start_vacation(callback: CallbackQuery, state: FSMContext):
 async def process_vacation_dates(message: Message, state: FSMContext, bot: Bot):
     try:
         parts = message.text.split(" - ")
-        start_date = datetime.strptime(parts[0].strip(), "%d.%m.%Y")
-        end_date = datetime.strptime(parts[1].strip(), "%d.%m.%Y").replace(hour=23, minute=59)
+        start_date = datetime.strptime(parts[0].strip(), "%d.%m.%Y").replace(tzinfo=TZ)
+        end_date = datetime.strptime(parts[1].strip(), "%d.%m.%Y").replace(hour=23, minute=59, tzinfo=TZ)
     except Exception:
         await message.answer("❌ Ошибка формата. Введите точно так: 05.11.2026 - 12.11.2026")
         return
@@ -873,12 +875,12 @@ async def process_vacation_dates(message: Message, state: FSMContext, bot: Bot):
         if s_chat: 
             try: 
                 await bot.send_message(s_chat, text)
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.1) # Защита от бана
             except: pass
         if p_chat: 
             try: 
                 await bot.send_message(p_chat, text)
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.1)
             except: pass
     await message.answer(f"✅ Готово! Отменено уроков: {canceled_count}.", reply_markup=get_tutor_menu())
 
@@ -952,8 +954,8 @@ async def cancel_lesson(callback: CallbackQuery, bot: Bot):
                 tutor_id, s_name, l_time, s_id = row
                 await lower_karma(s_id)
                 try:
-                    lesson_dt = datetime.strptime(l_time, "%d.%m.%Y %H:%M")
-                    is_late = (lesson_dt - datetime.now()).total_seconds() < 86400
+                    lesson_dt = datetime.strptime(l_time, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
+                    is_late = (lesson_dt - datetime.now(TZ)).total_seconds() < 86400
                 except: is_late = False
                 alert_icon = "🚨" if is_late else "🔴"
                 extra_text = " (ПОЗДНЯЯ ОТМЕНА!)" if is_late else ""
@@ -969,7 +971,8 @@ async def show_any_schedule(callback: CallbackQuery):
     role = "parent" if callback.data == "parent_schedule" else "student"
     student = await get_student_by_chat_id(callback.from_user.id, role)
     if not student:
-        await callback.answer("Ошибка привязки.", show_alert=True)
+        await callback.answer("Ошибка привязки. Возможно, репетитор удалил вас.", show_alert=True)
+        await safe_edit_text(callback.message, "Выберите роль:", reply_markup=get_main_menu())
         return
     s_id, s_name, tutor_id, subject, text_schedule, sub_left, sub_total, karma = student
     lessons = await get_lessons_for_student(s_id)
@@ -977,7 +980,7 @@ async def show_any_schedule(callback: CallbackQuery):
     text = f"{title}\n📚 Предмет: {subject}\n"
     if sub_total > 1: text += f"🎟 Абонемент: {sub_left} из {sub_total}\n"
     text += f"⏰ Расписание: {text_schedule or 'не указано'}\n📈 Индекс дисциплины: {karma}%\n\n"
-    now = datetime.now()
+    now = datetime.now(TZ)
     next_lesson_diff = None
     if lessons:
         text += "🗓 Ближайшие занятия:\n"
@@ -985,7 +988,7 @@ async def show_any_schedule(callback: CallbackQuery):
             text += f"🕒 {time_str}\n"
             if not next_lesson_diff:
                 try:
-                    l_time = datetime.strptime(time_str, "%d.%m.%Y %H:%M")
+                    l_time = datetime.strptime(time_str, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
                     if l_time > now: next_lesson_diff = l_time - now
                 except: pass
     else: text += "Точных дат пока нет."
@@ -1120,7 +1123,7 @@ def run_web():
     app.run(host='0.0.0.0', port=8080)
 
 async def main():
-    threading.Thread(target=run_web).start() 
+    threading.Thread(target=run_web).start() # ОБЯЗАТЕЛЬНО РАСКОММЕНТИРОВАНО ДЛЯ RENDER
     if not BOT_TOKEN:
         print("ОШИБКА: Токен не найден!")
         return
@@ -1129,7 +1132,7 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     
-    scheduler = AsyncIOScheduler()
+    scheduler = AsyncIOScheduler(timezone=TZ)
     scheduler.add_job(check_reminders, 'interval', minutes=1, args=(bot,))
     scheduler.add_job(check_subscriptions, 'interval', hours=1, args=(bot,))
     scheduler.start()
