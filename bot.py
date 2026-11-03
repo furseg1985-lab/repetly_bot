@@ -27,7 +27,7 @@ BOT_USERNAME = "RepetlyAssistantBot"
 # ==========================================
 ADMIN_USERNAME = "@furseg" 
 ADMIN_TG_LINK = "https://t.me/furseg" 
-ADMIN_ID = 123456789 # ВСТАВЬ СЮДА СВОЙ ID ИЗ @userinfobot!
+ADMIN_ID = 5278271346 # ВСТАВЬ СЮДА СВОЙ ID ИЗ @userinfobot!
 
 # Настройка часового пояса (Минск/Москва)
 TZ = ZoneInfo("Europe/Minsk")
