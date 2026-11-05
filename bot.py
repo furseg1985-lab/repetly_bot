@@ -423,7 +423,7 @@ async def init_db():
 
 async def set_user_lang(user_id: int, lang: str):
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute("UPDATE users SET language = ? WHERE user_id = ?", (lang, user_id))
+        await db.execute("INSERT INTO users (user_id, language) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET language = excluded.language", (user_id, lang))
         await db.commit()
 
 async def get_user_lang(user_id: int):
