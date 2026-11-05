@@ -30,9 +30,6 @@ TZ = ZoneInfo("Europe/Minsk")
 logging.basicConfig(level=logging.INFO)
 router = Router()
 
-# ==========================================
-# ПОЛНЫЙ СЛОВАРЬ ПЕРЕВОДОВ
-# ==========================================
 TEXTS = {
     "ru": {
         "choose_lang": "Пожалуйста, выберите язык:",
@@ -83,9 +80,9 @@ TEXTS = {
         "schedule_selected_day": "Выбран день: {date}.\nВыберите время:",
         "schedule_added": "✅ Занятие на {date} {time} добавлено!",
         
-        "stats_title": "📊 <b>Статистика ({month})</b>\n\n💰 Заработано: <b>{money} руб.</b>\n✅ Оплачено уроков: <b>{lessons}</b>\n🔔 Отправлено напоминаний: <b>{reminders}</b>\n⏳ Сэкономлено времени: <b>~{hours} ч.</b>\n",
+        "stats_title": "📊 <b>Статистика ({month})</b>\n\n💰 Заработано: <b>{money}</b>\n✅ Оплачено уроков: <b>{lessons}</b>\n🔔 Отправлено напоминаний: <b>{reminders}</b>\n⏳ Сэкономлено времени: <b>~{hours} ч.</b>\n",
         
-        "tariffs_text": "💎 <b>Тарифная сетка Repetly</b>\n\n👤 <b>Бесплатно:</b> до 3 активных учеников.\n🚀 <b>PRO:</b> безлимит учеников + все функции.\n\n📅 <b>1 месяц:</b>\n🇷🇺 490 ₽ | 🇧🇾 15 BYN | 🇰🇿 2500 ₸ | 🇪🇺 4.55 EUR\n\n📦 <b>6 месяцев (-15%):</b>\n🇷🇺 2200 ₽ | 🇧🇾 76.5 BYN | 🇰🇿 11250 ₸ | 🇪🇺 22.75 EUR\n\n🎓 <b>9 месяцев (-25%):</b>\n🇷🇺 3300 ₽ | 🇧🇾 101 BYN | 🇰🇿 16850 ₸ | 🇪🇺 36.5 EUR\n\nДля оплаты напишите нам: {admin}",
+        "tariffs_text": "💎 <b>Тарифная сетка Repetly</b>\n\n👤 <b>Бесплатно:</b> до 3 активных учеников.\n🚀 <b>PRO:</b> безлимит учеников + все функции.\n\n📅 <b>1 месяц:</b>\n🇷🇺 343 ₽ | 🇧🇾 10.5 BYN | 🇰🇿 1750 ₸ | 🇪🇺 3.19 EUR\n\n📦 <b>6 месяцев (-15%):</b>\n🇷🇺 1540 ₽ | 🇧🇾 53.5 BYN | 🇰🇿 7875 ₸ | 🇪🇺 15.93 EUR\n\n🎓 <b>9 месяцев (-25%):</b>\n🇷🇺 2310 ₽ | 🇧🇾 70.7 BYN | 🇰🇿 11795 ₸ | 🇪🇺 25.55 EUR\n\nДля оплаты напишите нам: {admin}",
         "btn_contact": "💬 Написать для оплаты",
         
         "students_empty": "У вас пока нет учеников.",
@@ -98,11 +95,11 @@ TEXTS = {
         "add_step1": "Шаг 1 из 5. Введите имя нового ученика:",
         "add_step2": "Отлично, {name}!\nШаг 2 из 5. Выберите предмет из списка:",
         "add_step2_text": "Введите название предмета текстом:",
-        "add_step3": "Выбран предмет: {subject}.\nШаг 3 из 5. Введите стоимость занятия (в рублях):",
+        "add_step3": "Выбран предмет: {subject}.\nШаг 3 из 5. Введите стоимость занятия:", 
         "add_step4": "Шаг 4 из 5. Напишите расписание текстом (например: Вт 16:00). Или нажмите Пропустить.",
         "add_step5": "Шаг 5 из 5. Выберите формат оплаты:",
         "add_error_price": "❌ Пожалуйста, введите только число. Например: 60",
-        "add_success": "✅ Ученик {name} добавлен!\n📚 Предмет: {subject}\n💰 Цена: {price} руб.\n\nСсылка для ученика:\n{link_student}\n\nСсылка для родителя:\n{link_parent}",
+        "add_success": "✅ Ученик {name} добавлен!\n📚 Предмет: {subject}\n💰 Цена: {price}\n\nСсылка для ученика:\n{link_student}\n\nСсылка для родителя:\n{link_parent}",
         "add_limit": "⚠️ <b>Вы достигли лимита бесплатного тарифа (3 ученика).</b>\n\nПерейдите на тариф <b>PRO</b>, чтобы добавлять учеников без ограничений.\n\nДля активации напишите админу: {admin}",
         "add_need_student": "Сначала добавьте ученика!",
         
@@ -155,7 +152,9 @@ TEXTS = {
         "cancel_lesson": "❌ Вы отменили занятие.",
         "tutor_notify_confirm": "🟢 Ученик {name} ПОДТВЕРДИЛ урок на {time}!",
         "tutor_notify_cancel": "{icon} Ученик {name} ОТМЕНИЛ урок на {time}!{late}",
-        "late_cancel": " (ПОЗДНЯЯ ОТМЕНА!)"
+        "late_cancel": " (ПОЗДНЯЯ ОТМЕНА!)",
+        
+        "burnout_msg": "🔋 <b>Анализ вашей нагрузки</b>\n\nНа этой неделе у вас было <b>{lessons}</b> уроков (отменено: {canceled}).\n\nВы работаете с высокой нагрузкой. Рекомендуем выделить время на отдых, чтобы избежать выгорания!",
     },
     "en": {
         "choose_lang": "Please choose a language:",
@@ -206,9 +205,9 @@ TEXTS = {
         "schedule_selected_day": "Selected day: {date}.\nChoose time:",
         "schedule_added": "✅ Lesson on {date} {time} added!",
         
-        "stats_title": "📊 <b>Statistics ({month})</b>\n\n💰 Earned: <b>{money} RUB</b>\n✅ Paid lessons: <b>{lessons}</b>\n🔔 Reminders sent: <b>{reminders}</b>\n⏳ Time saved: <b>~{hours} h.</b>\n",
+        "stats_title": "📊 <b>Statistics ({month})</b>\n\n💰 Earned: <b>{money}</b>\n✅ Paid lessons: <b>{lessons}</b>\n🔔 Reminders sent: <b>{reminders}</b>\n⏳ Time saved: <b>~{hours} h.</b>\n",
         
-        "tariffs_text": "💎 <b>Repetly Pricing</b>\n\n👤 <b>Free:</b> up to 3 active students.\n🚀 <b>PRO:</b> unlimited students + all features.\n\n📅 <b>1 month:</b>\n🇷🇺 490 RUB | 🇧🇾 15 BYN | 🇰🇿 2500 KZT | 🇪🇺 4.55 EUR\n\n📦 <b>6 months (-15%):</b>\n🇷🇺 2200 RUB | 🇧🇾 76.5 BYN | 🇰🇿 11250 KZT | 🇪🇺 22.75 EUR\n\n🎓 <b>9 months (-25%):</b>\n🇷🇺 3300 RUB | 🇧🇾 101 BYN | 🇰🇿 16850 KZT | 🇪🇺 36.5 EUR\n\nTo pay, contact: {admin}",
+        "tariffs_text": "💎 <b>Repetly Pricing</b>\n\n👤 <b>Free:</b> up to 3 active students.\n🚀 <b>PRO:</b> unlimited students + all features.\n\n📅 <b>1 month:</b>\n🇷🇺 343 RUB | 🇧🇾 10.5 BYN | 🇰🇿 1750 KZT | 🇪🇺 3.19 EUR\n\n📦 <b>6 months (-15%):</b>\n🇷🇺 1540 RUB | 🇧🇾 53.5 BYN | 🇰🇿 7875 KZT | 🇪🇺 15.93 EUR\n\n🎓 <b>9 months (-25%):</b>\n🇷🇺 2310 RUB | 🇧🇾 70.7 BYN | 🇰🇿 11795 KZT | 🇪🇺 25.55 EUR\n\nTo pay, contact: {admin}",
         "btn_contact": "💬 Contact for payment",
         
         "students_empty": "You don't have students yet.",
@@ -221,11 +220,11 @@ TEXTS = {
         "add_step1": "Step 1 of 5. Enter new student's name:",
         "add_step2": "Great, {name}!\nStep 2 of 5. Choose a subject from the list:",
         "add_step2_text": "Enter the subject name:",
-        "add_step3": "Subject chosen: {subject}.\nStep 3 of 5. Enter lesson price (in RUB):",
+        "add_step3": "Subject chosen: {subject}.\nStep 3 of 5. Enter lesson price:",
         "add_step4": "Step 4 of 5. Enter schedule (e.g. Tue 16:00). Or click Skip.",
         "add_step5": "Step 5 of 5. Choose payment format:",
         "add_error_price": "❌ Please enter only numbers. E.g. 60",
-        "add_success": "✅ Student {name} added!\n📚 Subject: {subject}\n💰 Price: {price} RUB\n\nStudent link:\n{link_student}\n\nParent link:\n{link_parent}",
+        "add_success": "✅ Student {name} added!\n📚 Subject: {subject}\n💰 Price: {price}\n\nStudent link:\n{link_student}\n\nParent link:\n{link_parent}",
         "add_limit": "⚠️ <b>You reached the free tier limit (3 students).</b>\n\nUpgrade to <b>PRO</b> to add unlimited students.\n\nTo activate, contact admin: {admin}",
         "add_need_student": "Add a student first!",
         
@@ -278,7 +277,9 @@ TEXTS = {
         "cancel_lesson": "❌ You canceled the lesson.",
         "tutor_notify_confirm": "🟢 Student {name} CONFIRMED lesson on {time}!",
         "tutor_notify_cancel": "{icon} Student {name} CANCELED lesson on {time}!{late}",
-        "late_cancel": " (LATE CANCEL!)"
+        "late_cancel": " (LATE CANCEL!)",
+        
+        "burnout_msg": "🔋 <b>Workload Analysis</b>\n\nThis week you had <b>{lessons}</b> lessons ({canceled} canceled).\n\nYou are working under high load. We recommend taking some time to rest to avoid burnout!",
     },
     "lv": {
         "choose_lang": "Lūdzu, izvēlieties valodu:",
@@ -329,9 +330,9 @@ TEXTS = {
         "schedule_selected_day": "Izvēlētā diena: {date}.\nIzvēlieties laiku:",
         "schedule_added": "✅ Nodarbība {date} {time} pievienota!",
         
-        "stats_title": "📊 <b>Statistika ({month})</b>\n\n💰 Nopelnīts: <b>{money} RUB</b>\n✅ Apmaksātas nodarbības: <b>{lessons}</b>\n🔔 Nosūtīti atgādinājumi: <b>{reminders}</b>\n⏳ Ietaupīts laiks: <b>~{hours} h.</b>\n",
+        "stats_title": "📊 <b>Statistika ({month})</b>\n\n💰 Nopelnīts: <b>{money}</b>\n✅ Apmaksātas nodarbības: <b>{lessons}</b>\n🔔 Nosūtīti atgādinājumi: <b>{reminders}</b>\n⏳ Ietaupīts laiks: <b>~{hours} h.</b>\n",
         
-        "tariffs_text": "💎 <b>Repetly Tarifi</b>\n\n👤 <b>Bezmaksas:</b> līdz 3 aktīviem skolēniem.\n🚀 <b>PRO:</b> neierobežots skolēnu skaits.\n\n📅 <b>1 mēnesis:</b>\n🇷🇺 490 RUB | 🇧🇾 15 BYN | 🇰🇿 2500 KZT | 🇪🇺 4.55 EUR\n\n📦 <b>6 mēneši (-15%):</b>\n🇷🇺 2200 RUB | 🇧🇾 76.5 BYN | 🇰🇿 11250 KZT | 🇪🇺 22.75 EUR\n\n🎓 <b>9 mēneši (-25%):</b>\n🇷🇺 3300 RUB | 🇧🇾 101 BYN | 🇰🇿 16850 KZT | 🇪🇺 36.5 EUR\n\nLai samaksātu, sazinieties: {admin}",
+        "tariffs_text": "💎 <b>Repetly Tarifi</b>\n\n👤 <b>Bezmaksas:</b> līdz 3 aktīviem skolēniem.\n🚀 <b>PRO:</b> neierobežots skolēnu skaits.\n\n📅 <b>1 mēnesis:</b>\n🇷🇺 343 RUB | 🇧🇾 10.5 BYN | 🇰🇿 1750 KZT | 🇪🇺 3.19 EUR\n\n📦 <b>6 mēneši (-15%):</b>\n🇷🇺 1540 RUB | 🇧🇾 53.5 BYN | 🇰🇿 7875 KZT | 🇪🇺 15.93 EUR\n\n🎓 <b>9 mēneši (-25%):</b>\n🇷🇺 2310 RUB | 🇧🇾 70.7 BYN | 🇰🇿 11795 KZT | 🇪🇺 25.55 EUR\n\nLai samaksātu, sazinieties: {admin}",
         "btn_contact": "💬 Sazināties par samaksu",
         
         "students_empty": "Jums vēl nav skolēnu.",
@@ -344,11 +345,11 @@ TEXTS = {
         "add_step1": "1. solis no 5. Ievadiet jaunā skolēna vārdu:",
         "add_step2": "Lieliski, {name}!\n2. solis no 5. Izvēlieties priekšmetu no saraksta:",
         "add_step2_text": "Ievadiet priekšmeta nosaukumu:",
-        "add_step3": "Izvēlēts priekšmets: {subject}.\n3. solis no 5. Ievadiet nodarbības cenu (RUB):",
+        "add_step3": "Izvēlēts priekšmets: {subject}.\n3. solis no 5. Ievadiet nodarbības cenu:",
         "add_step4": "4. solis no 5. Ievadiet grafiku (piem., Otr 16:00). Vai noklikšķiniet Izlaist.",
         "add_step5": "5. solis no 5. Izvēlieties maksājuma formātu:",
         "add_error_price": "❌ Lūdzu, ievadiet tikai skaitļus. Piem., 60",
-        "add_success": "✅ Skolēns {name} pievienots!\n📚 Priekšmets: {subject}\n💰 Cena: {price} RUB\n\nSkolēna saite:\n{link_student}\n\nVecāku saite:\n{link_parent}",
+        "add_success": "✅ Skolēns {name} pievienots!\n📚 Priekšmets: {subject}\n💰 Cena: {price}\n\nSkolēna saite:\n{link_student}\n\nVecāku saite:\n{link_parent}",
         "add_limit": "⚠️ <b>Jūs sasniedzāt bezmaksas limitu (3 skolēni).</b>\n\nPārejiet uz <b>PRO</b>, lai pievienotu neierobežotu skaitu skolēnu.\n\nLai aktivizētu, sazinieties ar administratoru: {admin}",
         "add_need_student": "Vispirms pievienojiet skolēnu!",
         
@@ -401,7 +402,9 @@ TEXTS = {
         "cancel_lesson": "❌ Jūs atcēlāt nodarbību.",
         "tutor_notify_confirm": "🟢 Skolēns {name} APSTIPRINĀJA nodarbību {time}!",
         "tutor_notify_cancel": "{icon} Skolēns {name} ATCĒLA nodarbību {time}!{late}",
-        "late_cancel": " (VĒLA ATCELŠANA!)"
+        "late_cancel": " (VĒLA ATCELŠANA!)",
+        
+        "burnout_msg": "🔋 <b>Jūsu slodzes analīze</b>\n\nŠonedēļ jums bija <b>{lessons}</b> nodarbības (atceltas: {canceled}).\n\nJūs strādājat ar augstu slodzi. Iesakām atvēlēt laiku atpūtai, lai izvairītos no izdegšanas!",
     }
 }
 
@@ -665,8 +668,51 @@ async def check_subscriptions(bot: Bot):
                 if expiry < now:
                     await db.execute("UPDATE users SET is_pro = 0 WHERE user_id = ?", (user_id,))
                     await db.commit()
-                    try: await bot.send_message(user_id, "⚠️ <b>Ваша подписка PRO истекла!</b>\n\nПродлите тариф в «💎 Тарифы и Подписка».", parse_mode="HTML")
+                    try:
+                        lang = await get_user_lang(user_id)
+                        msg = {
+                            "ru": "⚠️ <b>Ваша подписка PRO истекла!</b>\n\nПродлите тариф в «💎 Тарифы и Подписка».",
+                            "en": "⚠️ <b>Your PRO subscription has expired!</b>\n\nRenew it in «💎 Pricing».",
+                            "lv": "⚠️ <b>Jūsu PRO abonements ir beidzies!</b>\n\nAtjaunojiet to sadaļā «💎 Tarifi»."
+                        }
+                        await bot.send_message(user_id, msg.get(lang, msg["ru"]), parse_mode="HTML")
                     except Exception: pass
+
+async def check_burnout(bot: Bot):
+    now = datetime.now(TZ)
+    week_ago = now - timedelta(days=7)
+    two_weeks_ago = now - timedelta(days=14)
+
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute("SELECT user_id, language FROM users WHERE role = 'tutor'") as cursor:
+            tutors = await cursor.fetchall()
+
+        for tutor_id, lang in tutors:
+            async with db.execute("SELECT lesson_time, status FROM lessons WHERE tutor_id = ?", (tutor_id,)) as cursor:
+                lessons = await cursor.fetchall()
+
+            this_week_count = 0
+            last_week_count = 0
+            canceled_this_week = 0
+
+            for l_time_str, status in lessons:
+                try:
+                    l_time = datetime.strptime(l_time_str, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
+                    if week_ago <= l_time <= now:
+                        this_week_count += 1
+                        if status == 'canceled':
+                            canceled_this_week += 1
+                    elif two_weeks_ago <= l_time < week_ago:
+                        last_week_count += 1
+                except ValueError:
+                    continue
+
+            if this_week_count >= 5 and (this_week_count > last_week_count * 1.2 or canceled_this_week >= 3):
+                text = TEXTS[lang]["burnout_msg"].format(lessons=this_week_count, canceled=canceled_this_week)
+                try:
+                    await bot.send_message(tutor_id, text, parse_mode="HTML")
+                except Exception:
+                    pass
 
 class AddStudent(StatesGroup):
     waiting_for_name = State()
@@ -798,7 +844,7 @@ def get_payments_menu(unpaid_lessons, lang):
     builder = InlineKeyboardBuilder()
     if unpaid_lessons:
         for l_id, l_time, s_name, price, parent_chat in unpaid_lessons:
-            builder.button(text=f"💵 {s_name} ({price} RUB) - {l_time}", callback_data=f"pay_{l_id}")
+            builder.button(text=f"💵 {s_name} ({price}) - {l_time}", callback_data=f"pay_{l_id}")
     builder.button(text=TEXTS[lang]["btn_to_main"], callback_data="tutor_menu_back")
     builder.adjust(1)
     return builder.as_markup()
@@ -853,14 +899,12 @@ def get_time_menu(selected_date, lang):
 async def cmd_start(message: Message, command: CommandObject):
     user_id = message.from_user.id
     
-    # 1. Обработка пригласительных ссылок (ученики и родители)
     if command.args and command.args.startswith("bind_"):
         parts = command.args.split("_")
         student_id = int(parts[1])
         role = parts[2]
         await bind_user(student_id, user_id, role)
         
-        # Проверяем, выбран ли язык
         async with aiosqlite.connect(DB_NAME) as db:
             async with db.execute("SELECT language FROM users WHERE user_id = ?", (user_id,)) as cursor:
                 row = await cursor.fetchone()
@@ -875,7 +919,6 @@ async def cmd_start(message: Message, command: CommandObject):
             await message.answer(TEXTS[lang]["parent_menu"], reply_markup=get_parent_menu(lang))
         return
 
-    # 2. Обычный запуск (проверка языка и роли)
     role = await get_user_role(user_id)
     lang = await get_user_lang(user_id)
     
@@ -1009,7 +1052,7 @@ async def show_students(callback: CallbackQuery):
         for s_id, name, subject, price, schedule, sub_left, sub_total, karma in students:
             sched_text = f" ({schedule})" if schedule else ""
             sub_text = f" | 🎟 {sub_left}/{sub_total}" if sub_total > 1 else ""
-            text += f"• {name} — {subject} — {price} RUB{sched_text}{sub_text} | Karma: {karma}%\n"
+            text += f"• {name} — {subject} — {price}{sched_text}{sub_text} | Karma: {karma}%\n"
         text += TEXTS[lang]["students_delete_hint"]
         
     await safe_edit_text(callback.message, text, reply_markup=get_students_menu(students, lang))
@@ -1230,9 +1273,9 @@ async def process_payment(callback: CallbackQuery, bot: Bot):
         try:
             p_lang = await get_user_lang(parent_chat)
             pay_msg = {
-                "ru": f"💵 Репетитор подтвердил получение {price} руб. за занятие {s_name}.",
-                "en": f"💵 Tutor confirmed receipt of {price} RUB for {s_name}'s lesson.",
-                "lv": f"💵 Pasniedzējs apstiprināja {price} RUB saņemšanu par {s_name} nodarbību."
+                "ru": f"💵 Репетитор подтвердил получение {price} за занятие {s_name}.",
+                "en": f"💵 Tutor confirmed receipt of {price} for {s_name}'s lesson.",
+                "lv": f"💵 Pasniedzējs apstiprināja {price} saņemšanu par {s_name} nodarbību."
             }
             await bot.send_message(parent_chat, pay_msg[p_lang])
         except Exception: pass
@@ -1643,6 +1686,10 @@ async def main():
     scheduler = AsyncIOScheduler(timezone=TZ)
     scheduler.add_job(check_reminders, 'interval', minutes=1, args=(bot,))
     scheduler.add_job(check_subscriptions, 'interval', hours=1, args=(bot,))
+    
+    # ЗАПУСК ТРЕКЕРА ВЫГОРАНИЯ (каждое воскресенье в 18:00)
+    scheduler.add_job(check_burnout, 'cron', day_of_week='sun', hour=18, minute=0, args=(bot,))
+    
     scheduler.start()
     
     print("Бот запущен! Тестируем...")
