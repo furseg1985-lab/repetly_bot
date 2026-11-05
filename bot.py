@@ -4,7 +4,7 @@ import os
 import threading
 import html
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo # Фикс часового пояса!
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 
 from flask import Flask
@@ -22,22 +22,80 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_USERNAME = "RepetlyAssistantBot" 
 
-# ==========================================
-# ⚠️ ОБЯЗАТЕЛЬНО ЗАМЕНИ НА СВОИ ДАННЫЕ!
-# ==========================================
 ADMIN_USERNAME = "@furseg" 
 ADMIN_TG_LINK = "https://t.me/furseg" 
-ADMIN_ID = 5278271346 # ВСТАВЬ СЮДА СВОЙ ID ИЗ @userinfobot!
+ADMIN_ID = 5278271346
 
-# Настройка часового пояса (Минск/Москва)
 TZ = ZoneInfo("Europe/Minsk")
-
 logging.basicConfig(level=logging.INFO)
 router = Router()
 
-# ==========================================
-# ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО РЕДАКТИРОВАНИЯ
-# ==========================================
+TEXTS = {
+    "ru": {
+        "choose_lang": "Пожалуйста, выберите язык:",
+        "lang_set": "🇷🇺 Язык установлен: Русский",
+        "main_menu": "Главное меню:",
+        "choose_role": "👋 Здравствуйте! Выберите вашу роль:",
+        "role_tutor": "🎓 Я репетитор",
+        "role_student": "👨‍🎓 Я ученик",
+        "role_parent": "👩‍👦 Я родитель",
+        "tutor_menu": "Меню репетитора:",
+        "tariffs_text": "💎 <b>Тарифная сетка Repetly</b>\n\n👤 <b>Бесплатно:</b> до 3 активных учеников.\n🚀 <b>PRO:</b> безлимит учеников + все функции.\n\n📅 <b>1 месяц:</b>\n🇷🇺 490 ₽ | 🇧🇾 15 BYN | 🇰🇿 2500 ₸ | 🇪🇺 5 EUR\n\n📦 <b>6 месяцев (-15%):</b>\n🇷🇺 2200 ₽ | 🇧🇾 76.5 BYN | 🇪🇺 25 EUR\n\n🎓 <b>9 месяцев (-25%):</b>\n🇷🇺 3300 ₽ | 🇧🇾 101 BYN | 🇪🇺 40 EUR\n\nДля оплаты напишите нам: {admin}",
+        "btn_tariffs": "💎 Тарифы и Подписка",
+        "btn_back": "🔙 Сменить роль",
+        "btn_settings": "⚙️ Настройки",
+        "btn_schedule": "📅 Мое расписание",
+        "btn_students": "👤 Мои ученики",
+        "btn_payments": "💵 Учет оплат",
+        "btn_stats": "📊 Статистика",
+        "btn_report": "📝 Отчет родителю",
+        "btn_vacation": "🌴 Отпуск / Болезнь",
+        "btn_share": "🎁 Пригласить коллегу",
+    },
+    "en": {
+        "choose_lang": "Please choose a language:",
+        "lang_set": "🇬🇧 Language set: English",
+        "main_menu": "Main menu:",
+        "choose_role": "👋 Hello! Please choose your role:",
+        "role_tutor": "🎓 I am a tutor",
+        "role_student": "👨‍🎓 I am a student",
+        "role_parent": "👩‍👦 I am a parent",
+        "tutor_menu": "Tutor menu:",
+        "tariffs_text": "💎 <b>Repetly Pricing</b>\n\n👤 <b>Free:</b> up to 3 active students.\n🚀 <b>PRO:</b> unlimited students + all features.\n\n📅 <b>1 month:</b>\n🇷🇺 490 RUB | 🇧🇾 15 BYN | 🇪🇺 5 EUR\n\n📦 <b>6 months (-15%):</b>\n🇷🇺 2200 RUB | 🇧🇾 76.5 BYN | 🇪🇺 25 EUR\n\n🎓 <b>9 months (-25%):</b>\n🇷🇺 3300 RUB | 🇧🇾 101 BYN | 🇪🇺 40 EUR\n\nTo pay, contact: {admin}",
+        "btn_tariffs": "💎 Pricing",
+        "btn_back": "🔙 Change role",
+        "btn_settings": "⚙️ Settings",
+        "btn_schedule": "📅 Schedule",
+        "btn_students": "👤 My students",
+        "btn_payments": "💵 Payments",
+        "btn_stats": "📊 Statistics",
+        "btn_report": "📝 Report to parent",
+        "btn_vacation": "🌴 Vacation / Sick",
+        "btn_share": "🎁 Invite colleague",
+    },
+    "lv": {
+        "choose_lang": "Lūdzu, izvēlieties valodu:",
+        "lang_set": "🇱🇻 Valoda iestatīta: Latviešu",
+        "main_menu": "Galvenā izvēlne:",
+        "choose_role": "👋 Sveiki! Lūdzu, izvēlieties savu lomu:",
+        "role_tutor": "🎓 Esmu pasniedzējs",
+        "role_student": "👨‍🎓 Esmu skolēns",
+        "role_parent": "👩‍👦 Esmu vecāks",
+        "tutor_menu": "Pasniedzēja izvēlne:",
+        "tariffs_text": "💎 <b>Repetly Tarifi</b>\n\n👤 <b>Bezmaksas:</b> līdz 3 aktīviem skolēniem.\n🚀 <b>PRO:</b> neierobežots skolēnu skaits + visas funkcijas.\n\n📅 <b>1 mēnesis:</b>\n🇷🇺 490 RUB | 🇧🇾 15 BYN | 🇪🇺 5 EUR\n\n📦 <b>6 mēneši (-15%):</b>\n🇷🇺 2200 RUB | 🇧🇾 76.5 BYN | 🇪🇺 25 EUR\n\n🎓 <b>9 mēneši (-25%):</b>\n🇷🇺 3300 RUB | 🇧🇾 101 BYN | 🇪🇺 40 EUR\n\nLai samaksātu, sazinieties: {admin}",
+        "btn_tariffs": "💎 Tarifi",
+        "btn_back": "🔙 Mainīt lomu",
+        "btn_settings": "⚙️ Iestatījumi",
+        "btn_schedule": "📅 Grafiks",
+        "btn_students": "👤 Mani skolēni",
+        "btn_payments": "💵 Maksājumi",
+        "btn_stats": "📊 Statistika",
+        "btn_report": "📝 Ziņojums vecākiem",
+        "btn_vacation": "🌴 Atvaļinājums",
+        "btn_share": "🎁 Uzaicināt kolēģi",
+    }
+}
+
 async def safe_edit_text(message: Message, text: str, reply_markup=None, parse_mode=None):
     try:
         await message.edit_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
@@ -45,35 +103,26 @@ async def safe_edit_text(message: Message, text: str, reply_markup=None, parse_m
         if "message is not modified" not in str(e):
             logging.error(f"Ошибка при редактировании: {e}")
 
-# ==========================================
-# 1. БАЗА ДАННЫХ
-# ==========================================
 DB_NAME = "repetly.db"
 
 async def init_db():
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, role TEXT, payment_details TEXT DEFAULT '', is_pro INTEGER DEFAULT 0, pro_until TEXT DEFAULT NULL)")
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, tutor_id INTEGER, name TEXT, 
-                student_chat_id INTEGER, parent_chat_id INTEGER,
-                subject TEXT, price INTEGER DEFAULT 0, schedule TEXT,
-                sub_total INTEGER DEFAULT 0, sub_left INTEGER DEFAULT 0,
-                karma INTEGER DEFAULT 100
-            )
-        """)
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS lessons (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, tutor_id INTEGER, 
-                student_id INTEGER, lesson_time TEXT, 
-                reminded_24h INTEGER DEFAULT 0, reminded_2h INTEGER DEFAULT 0,
-                is_paid INTEGER DEFAULT 0, price INTEGER DEFAULT 0,
-                status TEXT DEFAULT 'pending', is_reminded INTEGER DEFAULT 0
-            )
-        """)
+        await db.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, role TEXT, language TEXT DEFAULT 'ru', payment_details TEXT DEFAULT '', is_pro INTEGER DEFAULT 0, pro_until TEXT DEFAULT NULL)")
+        await db.execute("CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, tutor_id INTEGER, name TEXT, student_chat_id INTEGER, parent_chat_id INTEGER, subject TEXT, price INTEGER DEFAULT 0, schedule TEXT, sub_total INTEGER DEFAULT 0, sub_left INTEGER DEFAULT 0, karma INTEGER DEFAULT 100)")
+        await db.execute("CREATE TABLE IF NOT EXISTS lessons (id INTEGER PRIMARY KEY AUTOINCREMENT, tutor_id INTEGER, student_id INTEGER, lesson_time TEXT, reminded_24h INTEGER DEFAULT 0, reminded_2h INTEGER DEFAULT 0, is_paid INTEGER DEFAULT 0, price INTEGER DEFAULT 0, status TEXT DEFAULT 'pending', is_reminded INTEGER DEFAULT 0)")
         await db.commit()
 
-# --- ФУНКЦИИ БАЗЫ ---
+async def set_user_lang(user_id: int, lang: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute("UPDATE users SET language = ? WHERE user_id = ?", (lang, user_id))
+        await db.commit()
+
+async def get_user_lang(user_id: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute("SELECT language FROM users WHERE user_id = ?", (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row and row[0] else "ru"
+
 async def set_user_role(user_id: int, role: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute("INSERT INTO users (user_id, role) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET role = excluded.role", (user_id, role))
@@ -259,37 +308,28 @@ async def get_parent_journal(student_id: int):
             paid = (await cursor.fetchone())[0]
         return total, paid
 
-# ==========================================
-# 2. ФОНОВЫЕ ЗАДАЧИ (С УЧЕТОМ ЧАСОВОГО ПОЯСА)
-# ==========================================
 async def check_reminders(bot: Bot):
     now = datetime.now(TZ)
     async with aiosqlite.connect(DB_NAME) as db:
         query = "SELECT l.id, l.lesson_time, l.reminded_24h, l.reminded_2h, s.name, s.subject, s.student_chat_id, s.parent_chat_id FROM lessons l JOIN students s ON l.student_id = s.id WHERE l.status != 'canceled'"
         async with db.execute(query) as cursor:
             lessons = await cursor.fetchall()
-            
         for l_id, l_time_str, r24, r2, s_name, subject, s_chat, p_chat in lessons:
             try:
                 lesson_time = datetime.strptime(l_time_str, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
             except ValueError:
                 continue 
-                
             time_diff = lesson_time - now
             hours_left = time_diff.total_seconds() / 3600
-            
             if 20 <= hours_left <= 24 and r24 == 0:
                 text = f"🔔 Напоминаем: завтра в {lesson_time.strftime('%H:%M')} у вас занятие по предмету {subject}.\nВы придете?"
                 builder = InlineKeyboardBuilder()
                 builder.button(text="✅ Буду", callback_data=f"confirm_l_{l_id}")
                 builder.button(text="❌ Не смогу", callback_data=f"cancel_l_{l_id}")
                 builder.adjust(2)
-
                 if s_chat: await bot.send_message(s_chat, text, reply_markup=builder.as_markup())
                 if p_chat: await bot.send_message(p_chat, f"🔔 Напоминаем: завтра в {lesson_time.strftime('%H:%M')} у {s_name} занятие по предмету {subject}.")
-                
                 await db.execute("UPDATE lessons SET reminded_24h = 1, is_reminded = 1 WHERE id = ?", (l_id,))
-                
             elif 0 < hours_left <= 2 and r2 == 0:
                 if s_chat: await bot.send_message(s_chat, f"⏰ Напоминаем: через 2 часа ({lesson_time.strftime('%H:%M')}) у вас занятие по предмету {subject}!")
                 if p_chat: await bot.send_message(p_chat, f"⏰ Напоминаем: через 2 часа ({lesson_time.strftime('%H:%M')}) у {s_name} занятие по предмету {subject}!")
@@ -307,34 +347,9 @@ async def check_subscriptions(bot: Bot):
                 if expiry < now:
                     await db.execute("UPDATE users SET is_pro = 0 WHERE user_id = ?", (user_id,))
                     await db.commit()
-                    try:
-                        await bot.send_message(user_id, "⚠️ <b>Ваша подписка PRO истекла!</b>\n\nТеперь вам снова доступно только 3 бесплатных ученика. Чтобы продлить тариф, зайдите в «💎 Тарифы и Подписка».", parse_mode="HTML")
-                    except Exception:
-                        pass
+                    try: await bot.send_message(user_id, "⚠️ <b>Ваша подписка PRO истекла!</b>\n\nПродлите тариф в «💎 Тарифы и Подписка».", parse_mode="HTML")
+                    except Exception: pass
 
-# ==========================================
-# 3. СЕКРЕТНАЯ КОМАНДА АДМИНА
-# ==========================================
-@router.message(Command("activate"))
-async def activate_pro(message: Message):
-    if message.from_user.id != ADMIN_ID:
-        return 
-    try:
-        args = message.text.split()
-        target_id = int(args[1])
-        months = int(args[2]) if len(args) > 2 else 1
-        days = months * 30
-        expiry = await set_user_pro(target_id, days)
-        await message.answer(f"✅ Пользователь {target_id} переведен на PRO на {months} мес. до {expiry}!")
-        try:
-            await message.bot.send_message(target_id, f"🎉 <b>Ваша оплата получена!</b>\nВам активирован тариф PRO на {months} мес.\nДата окончания: <b>{expiry.split(' ')[0]}</b>\n\nСпасибо, что выбрали Repetly!", parse_mode="HTML")
-        except: pass
-    except Exception:
-        await message.answer(f"❌ Ошибка. Используй: /activate ID [Кол-во месяцев]")
-
-# ==========================================
-# 4. СОСТОЯНИЯ (FSM)
-# ==========================================
 class AddStudent(StatesGroup):
     waiting_for_name = State()
     waiting_for_subject = State()
@@ -361,29 +376,36 @@ class VacationState(StatesGroup):
 class ReportState(StatesGroup):
     waiting_for_student = State()
 
-# ==========================================
-# 5. КЛАВИАТУРЫ
-# ==========================================
-def get_main_menu():
+def get_lang_menu():
     builder = InlineKeyboardBuilder()
-    builder.button(text="🎓 Я репетитор", callback_data="role_tutor")
-    builder.button(text="👨‍🎓 Я ученик", callback_data="role_student")
-    builder.button(text="👩‍👦 Я родитель", callback_data="role_parent")
+    builder.button(text="🇷🇺 Русский", callback_data="lang_ru")
+    builder.button(text="🇬🇧 English", callback_data="lang_en")
+    builder.button(text="🇱🇻 Latviešu", callback_data="lang_lv")
     builder.adjust(1)
     return builder.as_markup()
 
-def get_tutor_menu():
+def get_main_menu(lang):
+    lang = lang if lang in TEXTS else "ru"
     builder = InlineKeyboardBuilder()
-    builder.button(text="📅 Мое расписание", callback_data="tutor_schedule")
-    builder.button(text="👤 Мои ученики", callback_data="tutor_students")
-    builder.button(text="💵 Учет оплат", callback_data="tutor_payments")
-    builder.button(text="📊 Статистика", callback_data="tutor_stats")
-    builder.button(text="📝 Отчет родителю", callback_data="tutor_report")
-    builder.button(text="🌴 Отпуск / Болезнь", callback_data="tutor_vacation")
-    builder.button(text="💎 Тарифы и Подписка", callback_data="tutor_tariffs")
-    builder.button(text="🎁 Пригласить коллегу", callback_data="tutor_share")
-    builder.button(text="⚙️ Настройки", callback_data="tutor_settings")
-    builder.button(text="🔙 Сменить роль", callback_data="back_to_main")
+    builder.button(text=TEXTS[lang]["role_tutor"], callback_data="role_tutor")
+    builder.button(text=TEXTS[lang]["role_student"], callback_data="role_student")
+    builder.button(text=TEXTS[lang]["role_parent"], callback_data="role_parent")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def get_tutor_menu(lang):
+    lang = lang if lang in TEXTS else "ru"
+    builder = InlineKeyboardBuilder()
+    builder.button(text=TEXTS[lang]["btn_schedule"], callback_data="tutor_schedule")
+    builder.button(text=TEXTS[lang]["btn_students"], callback_data="tutor_students")
+    builder.button(text=TEXTS[lang]["btn_payments"], callback_data="tutor_payments")
+    builder.button(text=TEXTS[lang]["btn_stats"], callback_data="tutor_stats")
+    builder.button(text=TEXTS[lang]["btn_report"], callback_data="tutor_report")
+    builder.button(text=TEXTS[lang]["btn_vacation"], callback_data="tutor_vacation")
+    builder.button(text=TEXTS[lang]["btn_tariffs"], callback_data="tutor_tariffs")
+    builder.button(text=TEXTS[lang]["btn_share"], callback_data="tutor_share")
+    builder.button(text=TEXTS[lang]["btn_settings"], callback_data="tutor_settings")
+    builder.button(text=TEXTS[lang]["btn_back"], callback_data="back_to_main")
     builder.adjust(1)
     return builder.as_markup()
 
@@ -419,7 +441,6 @@ def get_confirm_delete_menu(student_id):
     builder = InlineKeyboardBuilder()
     builder.button(text="✅ Да, удалить", callback_data=f"confirm_del_{student_id}")
     builder.button(text="🔙 Отмена", callback_data="tutor_students")
-    builder.button(text="🏠 В главное меню", callback_data="tutor_menu_back")
     builder.adjust(1)
     return builder.as_markup()
 
@@ -491,19 +512,23 @@ def get_time_menu(selected_date):
         builder.button(text=t, callback_data=f"time_{selected_date}_{t}")
     builder.button(text="🏠 Отмена", callback_data="back_to_main")
     builder.adjust(3)
-    return builder.as_markup()
+    return builder.as_markup() 
+# ==========================================
+# ОБРАБОТЧИКИ КОМАНД И КНОПОК
+# ==========================================
 
-# ==========================================
-# 6. ОБРАБОТЧИКИ СТАРТА
-# ==========================================
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
     user_id = message.from_user.id
+    
+    # Обработка ссылок-приглашений
     if command.args and command.args.startswith("bind_"):
         parts = command.args.split("_")
         student_id = int(parts[1])
         role = parts[2]
         await bind_user(student_id, user_id, role)
+        await set_user_lang(user_id, "ru")
+        
         if role == "student":
             await message.answer("✅ Успешно! Вы привязаны к репетитору.", reply_markup=get_student_menu())
         else:
@@ -511,80 +536,109 @@ async def cmd_start(message: Message, command: CommandObject):
         return
 
     role = await get_user_role(user_id)
+    lang = await get_user_lang(user_id)
+    
+    # Проверяем, выбран ли язык (если нет - просим выбрать)
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute("SELECT language FROM users WHERE user_id = ?", (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            if not row or not row[0]:
+                await message.answer(TEXTS["ru"]["choose_lang"], reply_markup=get_lang_menu())
+                return
+
+    # Выдаем меню в зависимости от роли
     if role == "tutor":
-        await message.answer("С возвращением! Меню репетитора:", reply_markup=get_tutor_menu())
+        await message.answer(TEXTS[lang]["tutor_menu"], reply_markup=get_tutor_menu(lang))
     elif role == "student":
         await message.answer("С возвращением! Меню ученика:", reply_markup=get_student_menu())
     elif role == "parent":
         await message.answer("С возвращением! Меню родителя:", reply_markup=get_parent_menu())
     else:
-        await message.answer("👋 Здравствуйте! Выберите вашу роль:", reply_markup=get_main_menu())
+        await message.answer(TEXTS[lang]["choose_role"], reply_markup=get_main_menu(lang))
+
+@router.callback_query(F.data.startswith("lang_"))
+async def process_lang_selection(callback: CallbackQuery):
+    lang = callback.data.split("_")[1]
+    user_id = callback.from_user.id
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute("INSERT INTO users (user_id, language) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET language = excluded.language", (user_id, lang))
+        await db.commit()
+        
+    await safe_edit_text(callback.message, TEXTS[lang]["lang_set"] + "\n\n" + TEXTS[lang]["choose_role"], reply_markup=get_main_menu(lang))
+    await callback.answer()
 
 @router.callback_query(F.data.startswith("role_"))
 async def process_role_selection(callback: CallbackQuery):
     role = callback.data.split("_")[1]
+    lang = await get_user_lang(callback.from_user.id)
+    
     if role in ["student", "parent"]:
-        await safe_edit_text(callback.message, "⚠️ Чтобы стать учеником или родителем, перейдите по ссылке от репетитора.", reply_markup=get_main_menu())
+        await safe_edit_text(callback.message, "⚠️ Чтобы стать учеником или родителем, перейдите по ссылке от репетитора.", reply_markup=get_main_menu(lang))
     else:
         await set_user_role(callback.from_user.id, role)
-        text = (
-            "🎓 <b>Добро пожаловать в Repetly!</b>\n\n"
-            "1️⃣ Зайдите в <b>«⚙️ Настройки»</b> и укажите реквизиты.\n"
-            "2️⃣ Добавьте первого ученика в <b>«👤 Мои ученики»</b> (до 3-х бесплатно).\n"
-            "3️⃣ Назначьте занятие в <b>«📅 Мое расписание»</b>.\n\n"
-            "⚠️ <i>Все уроки по вашему местному времени.</i>"
-        )
-        await safe_edit_text(callback.message, text, reply_markup=get_tutor_menu(), parse_mode="HTML")
+        text = f"🎓 <b>{TEXTS[lang]['tutor_menu']}</b>"
+        await safe_edit_text(callback.message, text, reply_markup=get_tutor_menu(lang), parse_mode="HTML")
     await callback.answer()
 
 @router.callback_query(F.data == "back_to_main")
 async def process_back_button(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    # ПРАВИЛЬНЫЙ ВЫХОД В ГЛАВНОЕ МЕНЮ
-    await safe_edit_text(callback.message, "👋 Выберите вашу роль:", reply_markup=get_main_menu())
+    lang = await get_user_lang(callback.from_user.id)
+    await safe_edit_text(callback.message, TEXTS[lang]["choose_role"], reply_markup=get_main_menu(lang))
     await callback.answer()
 
 @router.callback_query(F.data == "tutor_menu_back")
 async def process_tutor_back(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    await safe_edit_text(callback.message, "Главное меню репетитора:", reply_markup=get_tutor_menu())
+    lang = await get_user_lang(callback.from_user.id)
+    await safe_edit_text(callback.message, TEXTS[lang]["tutor_menu"], reply_markup=get_tutor_menu(lang))
     await callback.answer()
 
 # ==========================================
-# 7. ТАРИФЫ И УВЕДОМЛЕНИЕ АДМИНА
+# СЕКРЕТНАЯ КОМАНДА АДМИНА
+# ==========================================
+@router.message(Command("activate"))
+async def activate_pro(message: Message):
+    if message.from_user.id != ADMIN_ID:
+        return 
+    try:
+        args = message.text.split()
+        target_id = int(args[1])
+        months = int(args[2]) if len(args) > 2 else 1
+        days = months * 30
+        expiry = await set_user_pro(target_id, days)
+        await message.answer(f"✅ Пользователь {target_id} переведен на PRO на {months} мес. до {expiry}!")
+        try:
+            await message.bot.send_message(target_id, f"🎉 <b>Ваша оплата получена!</b>\nВам активирован тариф PRO на {months} мес.\nДата окончания: <b>{expiry.split(' ')[0]}</b>\n\nСпасибо, что выбрали Repetly!", parse_mode="HTML")
+        except: pass
+    except Exception:
+        await message.answer(f"❌ Ошибка. Используй: /activate ID [Кол-во месяцев]")
+
+# ==========================================
+# ТАРИФЫ
 # ==========================================
 @router.callback_query(F.data == "tutor_tariffs")
 async def show_tariffs(callback: CallbackQuery, bot: Bot):
-    text = (
-        "💎 <b>Тарифная сетка Repetly</b>\n\n"
-        "👤 <b>Бесплатно:</b> до 3 активных учеников.\n"
-        "🚀 <b>PRO:</b> безлимит учеников + все функции.\n\n"
-        "📅 <b>1 месяц:</b>\n"
-        "🇷🇺 490 ₽ | 🇧🇾 15 BYN | 🇰🇿 2500 ₸\n\n"
-        "📦 <b>6 месяцев (-15%):</b>\n"
-        "🇷🇺 2200 ₽ | 🇧🇾 76.5 BYN | 🇰🇿 11250 ₸\n\n"
-        "🎓 <b>9 месяцев (-25%):</b>\n"
-        "🇷🇺 3300 ₽ | 🇧🇾 101 BYN | 🇰🇿 16850 ₸\n\n"
-        f"Для оплаты напишите нам: {ADMIN_USERNAME}"
-    )
+    lang = await get_user_lang(callback.from_user.id)
+    text = TEXTS[lang]["tariffs_text"].format(admin=ADMIN_USERNAME)
+    
     builder = InlineKeyboardBuilder()
     builder.button(text="💬 Написать для оплаты", url=ADMIN_TG_LINK)
-    builder.button(text="🏠 В главное меню", callback_data="tutor_menu_back")
+    builder.button(text="🏠 В меню", callback_data="tutor_menu_back")
     builder.adjust(1)
     
     client_id = callback.from_user.id
     client_name = html.escape(callback.from_user.full_name)
-    client_username = f"@{callback.from_user.username}" if callback.from_user.username else "нет"
     
     try:
-        await bot.send_message(ADMIN_ID, f"🔔 <b>Клиент хочет купить Premium!</b>\n\n👤 Имя: {client_name}\n🔗 Юзернейм: {client_username}\n🆔 ID: <code>{client_id}</code>\n\nЧтобы активировать на 1 месяц, отправь:\n<code>/activate {client_id} 1</code>", parse_mode="HTML")
+        await bot.send_message(ADMIN_ID, f"🔔 <b>Клиент хочет купить Premium!</b>\n\n👤 Имя: {client_name}\n🆔 ID: <code>{client_id}</code>\n\nЯзык: {lang}\nАктивация: <code>/activate {client_id} 1</code>", parse_mode="HTML")
     except Exception: pass
 
     await safe_edit_text(callback.message, text, reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()
 
 # ==========================================
-# 8. ДОБАВЛЕНИЕ УЧЕНИКА
+# УЧЕНИКИ (ДОБАВЛЕНИЕ И УДАЛЕНИЕ)
 # ==========================================
 @router.callback_query(F.data == "tutor_students")
 async def show_students(callback: CallbackQuery):
@@ -653,7 +707,7 @@ async def process_student_price(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("❌ Пожалуйста, введите только число. Например: 60")
         return
-    await message.answer("Шаг 4 из 5. Напишите расписание текстом. Или нажмите Пропустить.", reply_markup=get_skip_menu())
+    await message.answer("Шаг 4 из 5. Напишите расписание текстом (например: Вт 16:00). Или нажмите Пропустить.", reply_markup=get_skip_menu())
     await state.set_state(AddStudent.waiting_for_schedule)
 
 @router.message(AddStudent.waiting_for_schedule)
@@ -682,7 +736,7 @@ async def finish_add_student(tutor_id, name, subject, price, schedule, sub_total
     link_student = f"https://t.me/{BOT_USERNAME}?start=bind_{student_id}_student"
     link_parent = f"https://t.me/{BOT_USERNAME}?start=bind_{student_id}_parent"
     text = f"✅ Ученик {html.escape(name)} добавлен!\n📚 Предмет: {html.escape(subject)}\n💰 Цена: {price} руб.\n\nСсылка для ученика:\n{link_student}\n\nСсылка для родителя:\n{link_parent}"
-    await message_obj.answer(text, reply_markup=get_tutor_menu())
+    await message_obj.answer(text, reply_markup=get_tutor_menu(await get_user_lang(tutor_id)))
 
 @router.callback_query(F.data.startswith("del_student_"))
 async def ask_delete_student(callback: CallbackQuery):
@@ -697,51 +751,8 @@ async def process_delete_student(callback: CallbackQuery):
     await show_students(callback)
 
 # ==========================================
-# 9. РАСПИСАНИЕ, ОПЛАТЫ И СТАТИСТИКА
+# РАСПИСАНИЕ И ОПЛАТЫ
 # ==========================================
-@router.callback_query(F.data == "tutor_report")
-async def start_report(callback: CallbackQuery, state: FSMContext):
-    students = await get_students_by_tutor(callback.from_user.id)
-    if not students:
-        await callback.answer("Сначала добавьте ученика!", show_alert=True)
-        return
-    builder = InlineKeyboardBuilder()
-    for s_id, name, subject, price, schedule, sub_l, sub_t, karma in students: 
-        builder.button(text=f"{name} ({subject})", callback_data=f"rep_student_{s_id}")
-    builder.button(text="🏠 Отмена", callback_data="tutor_menu_back")
-    builder.adjust(1)
-    await safe_edit_text(callback.message, "Кому отправить отчет об успехах?", reply_markup=builder.as_markup())
-    await state.set_state(ReportState.waiting_for_student)
-    await callback.answer()
-
-@router.callback_query(ReportState.waiting_for_student, F.data.startswith("rep_student_"))
-async def process_report_student(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    student_id = int(callback.data.split("_")[2])
-    student = await get_student_info(student_id)
-    if not student:
-        await callback.answer("Ошибка данных", show_alert=True)
-        return
-    s_id, s_name, tutor_id, subject, price, sub_left, sub_total, karma, parent_chat = student
-    total, paid = await get_parent_journal(s_id)
-    text = (
-        f"📝 <b>Ежемесячный отчет об успехах!</b>\n\n"
-        f"👤 Ученик: {s_name}\n📚 Предмет: {subject}\n\n"
-        f"📅 Проведено уроков: {total}\n✅ Оплачено уроков: {paid}\n📈 Индекс дисциплины: {karma}%\n"
-    )
-    if sub_total > 1: text += f"🎟 Остаток абонемента: {sub_left} из {sub_total}\n"
-    text += f"\n<i>Отчет сгенерирован в Repetly.</i>"
-    
-    if parent_chat:
-        try:
-            await bot.send_message(parent_chat, text, parse_mode="HTML")
-            await safe_edit_text(callback.message, "✅ Отчет отправлен родителю!", reply_markup=get_tutor_menu())
-        except Exception:
-            await safe_edit_text(callback.message, "❌ Ошибка! Родитель не привязал аккаунт.", reply_markup=get_tutor_menu())
-    else:
-        await safe_edit_text(callback.message, "❌ Ошибка! Родитель не привязан.", reply_markup=get_tutor_menu())
-    await state.clear()
-    await callback.answer()
-
 @router.callback_query(F.data == "tutor_schedule")
 async def show_tutor_schedule(callback: CallbackQuery):
     lessons = await get_lessons_for_tutor(callback.from_user.id)
@@ -791,7 +802,7 @@ async def process_lesson_time(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await add_lesson(callback.from_user.id, data.get("student_id"), f"{selected_date} {selected_time}")
     await state.clear()
-    await safe_edit_text(callback.message, f"✅ Занятие на {selected_date} {selected_time} добавлено!", reply_markup=get_tutor_menu())
+    await safe_edit_text(callback.message, f"✅ Занятие на {selected_date} {selected_time} добавлено!", reply_markup=get_tutor_menu(await get_user_lang(callback.from_user.id)))
     await callback.answer()
 
 @router.callback_query(F.data == "tutor_payments")
@@ -827,7 +838,6 @@ async def process_payment(callback: CallbackQuery, bot: Bot):
                 except Exception: pass
 
     await callback.answer("✅ Оплата зафиксирована!", show_alert=True)
-    
     if parent_chat:
         try: await bot.send_message(parent_chat, f"💵 Репетитор подтвердил получение {price} руб. за занятие {s_name}.")
         except Exception: pass
@@ -836,6 +846,9 @@ async def process_payment(callback: CallbackQuery, bot: Bot):
     text = "💵 Учет оплат\n\nУра! Все занятия оплачены." if not unpaid else "💵 Учет оплат\n\nНажмите, чтобы отметить оплату:"
     await safe_edit_text(callback.message, text, reply_markup=get_payments_menu(unpaid))
 
+# ==========================================
+# СТАТИСТИКА И ОТЧЕТЫ
+# ==========================================
 @router.callback_query(F.data == "tutor_stats")
 async def show_stats(callback: CallbackQuery):
     total_money, total_lessons = await get_monthly_earnings(callback.from_user.id)
@@ -848,8 +861,51 @@ async def show_stats(callback: CallbackQuery):
     await safe_edit_text(callback.message, text, reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()
 
+@router.callback_query(F.data == "tutor_report")
+async def start_report(callback: CallbackQuery, state: FSMContext):
+    students = await get_students_by_tutor(callback.from_user.id)
+    if not students:
+        await callback.answer("Сначала добавьте ученика!", show_alert=True)
+        return
+    builder = InlineKeyboardBuilder()
+    for s_id, name, subject, price, schedule, sub_l, sub_t, karma in students: 
+        builder.button(text=f"{name} ({subject})", callback_data=f"rep_student_{s_id}")
+    builder.button(text="🏠 Отмена", callback_data="tutor_menu_back")
+    builder.adjust(1)
+    await safe_edit_text(callback.message, "Кому отправить отчет об успехах?", reply_markup=builder.as_markup())
+    await state.set_state(ReportState.waiting_for_student)
+    await callback.answer()
+
+@router.callback_query(ReportState.waiting_for_student, F.data.startswith("rep_student_"))
+async def process_report_student(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    student_id = int(callback.data.split("_")[2])
+    student = await get_student_info(student_id)
+    if not student:
+        await callback.answer("Ошибка данных", show_alert=True)
+        return
+    s_id, s_name, tutor_id, subject, price, sub_left, sub_total, karma, parent_chat = student
+    total, paid = await get_parent_journal(s_id)
+    text = (
+        f"📝 <b>Ежемесячный отчет об успехах!</b>\n\n"
+        f"👤 Ученик: {s_name}\n📚 Предмет: {subject}\n\n"
+        f"📅 Проведено уроков: {total}\n✅ Оплачено уроков: {paid}\n📈 Индекс дисциплины: {karma}%\n"
+    )
+    if sub_total > 1: text += f"🎟 Остаток абонемента: {sub_left} из {sub_total}\n"
+    text += f"\n<i>Отчет сгенерирован в Repetly.</i>"
+    
+    if parent_chat:
+        try:
+            await bot.send_message(parent_chat, text, parse_mode="HTML")
+            await safe_edit_text(callback.message, "✅ Отчет отправлен родителю!", reply_markup=get_tutor_menu(await get_user_lang(callback.from_user.id)))
+        except Exception:
+            await safe_edit_text(callback.message, "❌ Ошибка! Родитель не привязал аккаунт.", reply_markup=get_tutor_menu(await get_user_lang(callback.from_user.id)))
+    else:
+        await safe_edit_text(callback.message, "❌ Ошибка! Родитель не привязан.", reply_markup=get_tutor_menu(await get_user_lang(callback.from_user.id)))
+    await state.clear()
+    await callback.answer()
+
 # ==========================================
-# 10. ОТПУСК, НАСТРОЙКИ И ВИРАЛЬНОСТЬ
+# ОТПУСК И НАСТРОЙКИ
 # ==========================================
 @router.callback_query(F.data == "tutor_vacation")
 async def start_vacation(callback: CallbackQuery, state: FSMContext):
@@ -875,14 +931,14 @@ async def process_vacation_dates(message: Message, state: FSMContext, bot: Bot):
         if s_chat: 
             try: 
                 await bot.send_message(s_chat, text)
-                await asyncio.sleep(0.1) # Защита от бана
+                await asyncio.sleep(0.1)
             except: pass
         if p_chat: 
             try: 
                 await bot.send_message(p_chat, text)
                 await asyncio.sleep(0.1)
             except: pass
-    await message.answer(f"✅ Готово! Отменено уроков: {canceled_count}.", reply_markup=get_tutor_menu())
+    await message.answer(f"✅ Готово! Отменено уроков: {canceled_count}.", reply_markup=get_tutor_menu(await get_user_lang(message.from_user.id)))
 
 @router.callback_query(F.data == "tutor_share")
 async def share_bot(callback: CallbackQuery):
@@ -905,7 +961,7 @@ async def show_settings(callback: CallbackQuery):
             async with db.execute("SELECT pro_until FROM users WHERE user_id = ?", (user_id,)) as cursor:
                 row = await cursor.fetchone()
                 if row and row[0]:
-                    pro_status = f"\n💎 <b>Тариф PRO</b> (до {row[0].split(' ')[0]})\n"
+                    pro_status = f"\n💎 <b>PRO</b> (до {row[0].split(' ')[0]})\n"
     text = f"⚙️ <b>Настройки профиля</b>\n{pro_status}\n🆔 Ваш ID: <code>{user_id}</code>\n<i>(Сообщите его админу)</i>\n\n💳 Реквизиты:\n{details}"
     builder = InlineKeyboardBuilder()
     builder.button(text="✏️ Изменить реквизиты", callback_data="edit_details")
@@ -924,10 +980,10 @@ async def edit_settings(callback: CallbackQuery, state: FSMContext):
 async def save_settings(message: Message, state: FSMContext):
     await update_payment_details(message.from_user.id, message.text)
     await state.clear()
-    await message.answer("✅ Обновлено!", reply_markup=get_tutor_menu())
+    await message.answer("✅ Обновлено!", reply_markup=get_tutor_menu(await get_user_lang(message.from_user.id)))
 
 # ==========================================
-# 11. УВЕДОМЛЕНИЯ ОБ ОТМЕНЕ (УЧЕНИК)
+# УВЕДОМЛЕНИЯ УЧЕНИКА (ПОДТВЕРЖДЕНИЕ/ОТМЕНА)
 # ==========================================
 @router.callback_query(F.data.startswith("confirm_l_"))
 async def confirm_lesson(callback: CallbackQuery, bot: Bot):
@@ -964,15 +1020,15 @@ async def cancel_lesson(callback: CallbackQuery, bot: Bot):
     await callback.answer("Жаль. Мы сообщили.")
 
 # ==========================================
-# 12. МЕНЮ УЧЕНИКА И РОДИТЕЛЯ
+# МЕНЮ УЧЕНИКА И РОДИТЕЛЯ
 # ==========================================
 @router.callback_query(F.data.in_({"student_schedule", "parent_schedule"}))
 async def show_any_schedule(callback: CallbackQuery):
     role = "parent" if callback.data == "parent_schedule" else "student"
     student = await get_student_by_chat_id(callback.from_user.id, role)
     if not student:
-        await callback.answer("Ошибка привязки. Возможно, репетитор удалил вас.", show_alert=True)
-        await safe_edit_text(callback.message, "Выберите роль:", reply_markup=get_main_menu())
+        await callback.answer("Ошибка привязки.", show_alert=True)
+        await safe_edit_text(callback.message, "Выберите роль:", reply_markup=get_main_menu("ru"))
         return
     s_id, s_name, tutor_id, subject, text_schedule, sub_left, sub_total, karma = student
     lessons = await get_lessons_for_student(s_id)
@@ -981,21 +1037,11 @@ async def show_any_schedule(callback: CallbackQuery):
     if sub_total > 1: text += f"🎟 Абонемент: {sub_left} из {sub_total}\n"
     text += f"⏰ Расписание: {text_schedule or 'не указано'}\n📈 Индекс дисциплины: {karma}%\n\n"
     now = datetime.now(TZ)
-    next_lesson_diff = None
     if lessons:
         text += "🗓 Ближайшие занятия:\n"
         for l_id, time_str, subj in lessons: 
             text += f"🕒 {time_str}\n"
-            if not next_lesson_diff:
-                try:
-                    l_time = datetime.strptime(time_str, "%d.%m.%Y %H:%M").replace(tzinfo=TZ)
-                    if l_time > now: next_lesson_diff = l_time - now
-                except: pass
     else: text += "Точных дат пока нет."
-    if next_lesson_diff:
-        days = next_lesson_diff.days
-        hours = next_lesson_diff.seconds // 3600
-        text += f"\n⏳ До следующего урока: {days} д. {hours} ч."
     reply_menu = get_parent_menu() if role == "parent" else get_student_menu()
     await safe_edit_text(callback.message, text, reply_markup=reply_menu)
     await callback.answer()
@@ -1111,7 +1157,7 @@ async def show_parent_journal(callback: CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# 13. ВЕБ-СЕРВЕР И ЗАПУСК
+# ВЕБ-СЕРВЕР И ЗАПУСК
 # ==========================================
 app = Flask(__name__)
 
@@ -1123,7 +1169,8 @@ def run_web():
     app.run(host='0.0.0.0', port=8080)
 
 async def main():
-    threading.Thread(target=run_web).start() # ОБЯЗАТЕЛЬНО РАСКОММЕНТИРОВАНО ДЛЯ RENDER
+    # Обязательно раскомментировано для работы на Render
+    threading.Thread(target=run_web).start() 
     if not BOT_TOKEN:
         print("ОШИБКА: Токен не найден!")
         return
@@ -1132,6 +1179,7 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     
+    # Запуск планировщика
     scheduler = AsyncIOScheduler(timezone=TZ)
     scheduler.add_job(check_reminders, 'interval', minutes=1, args=(bot,))
     scheduler.add_job(check_subscriptions, 'interval', hours=1, args=(bot,))
